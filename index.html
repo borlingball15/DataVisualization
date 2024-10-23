@@ -2,122 +2,122 @@
 <meta charset="utf-8">
 
 <!-- Load d3.js -->
-<script src="https://d3js.org/d3.v4.js"></script>
-
-<!-- Color palette -->
-<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3.v6.js"></script>
 
 <!-- Create a div where the graph will take place -->
 <div id="my_dataviz"></div>
 
-<style>
-.node:hover {
-  stroke-width: 7px !important;
-  opacity: 1 !important;
-}
-</style>
-
 <script>
+// Get the full window width and height
+const width = window.innerWidth;
+const height = window.innerHeight;
 
-// set the dimensions and margins of the graph
-var width = 460
-var height = 460
-
-// append the svg object to the body of the page
-var svg = d3.select("#my_dataviz")
+// Append the svg object to the body of the page and make it full screen
+const svg = d3.select("#my_dataviz")
   .append("svg")
     .attr("width", width)
-    .attr("height", height)
+    .attr("height", height);
 
-// Load external JSON file
-d3.json("songs.json").then(function(data) {
+// My Data 
+const data = [
+  { "artist": "Daniel Caesar", "song": "Best Part", "plays": 12 },
+  { "artist": "Abu", "song": "3 Daqat", "plays": 20 },
+  { "artist": "Vacations", "song": "Telephones", "plays": 9 },
+  { "artist": "Tyler The Creator", "song": "See You Again", "plays": 16 },
+  { "artist": "Don Toliver", "song": "Crossfaded", "plays": 12 },
+  { "artist": "Kaytranada", "song": "Witchy", "plays": 16 }
+];
 
-  // Color palette based on your color categories
-  var color = d3.scaleOrdinal()
-    .domain(["Blue", "Green", "Red", "Yellow", "Purple", "Grey"])
-    .range(d3.schemeSet1);
+// Color palette for artists
+const color = d3.scaleOrdinal()
+  .domain(data.map(d => d.artist))
+  .range(d3.schemeSet2);
 
-  // Size scale for the number of plays
-  var size = d3.scaleLinear()
-    .domain([0, 20])
-    .range([7, 55]);  // Circle size between 7 and 55 px
+// Size scale for plays
+const size = d3.scaleLinear()
+  .domain([d3.min(data, d => d.plays), d3.max(data, d => d.plays)])
+  .range([10, 50]);  // circle size between 10 and 50 px
 
-  // Create a tooltip
-  var Tooltip = d3.select("#my_dataviz")
-    .append("div")
-    .style("opacity", 0)
-    .attr("class", "tooltip")
-    .style("background-color", "white")
-    .style("border", "solid")
-    .style("border-width", "2px")
-    .style("border-radius", "5px")
-    .style("padding", "5px")
+// Create a tooltip
+const Tooltip = d3.select("body")
+  .append("div")
+  .style("opacity", 0)
+  .attr("class", "tooltip")
+  .style("background-color", "white")
+  .style("border", "solid")
+  .style("border-width", "2px")
+  .style("border-radius", "5px")
+  .style("padding", "5px")
+  .style("position", "absolute")  // Ensure the tooltip is positioned relative to the window
+  .style("pointer-events", "none");  // Ensure the tooltip doesn't interfere with mouse events
 
-  // Tooltip functions
-  var mouseover = function(d) {
-    Tooltip.style("opacity", 1)
-  }
-  var mousemove = function(d) {
-    Tooltip
-      .html('<u>' + d.key + '</u>' + "<br>Artist: " + d.artist + "<br>" + d.value + " plays")
-      .style("left", (d3.mouse(this)[0] + 20) + "px")
-      .style("top", (d3.mouse(this)[1]) + "px")
-  }
-  var mouseleave = function(d) {
-    Tooltip.style("opacity", 0)
-  }
+// Functions for the tooltip's hover actions
+const mouseover = function(event, d) {
+  Tooltip.style("opacity", 1);
+};
 
-  // Initialize the circles: located at the center initially
-  var node = svg.append("g")
-    .selectAll("circle")
-    .data(data)
-    .enter()
-    .append("circle")
-      .attr("class", "node")
-      .attr("r", function(d) { return size(d.value) })
-      .attr("cx", width / 2)
-      .attr("cy", height / 2)
-      .style("fill", function(d) { return color(d.region) })
-      .style("fill-opacity", 0.8)
-      .attr("stroke", "black")
-      .style("stroke-width", 1)
-      .on("mouseover", mouseover)
-      .on("mousemove", mousemove)
-      .on("mouseleave", mouseleave)
-      .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended));
+const mousemove = function(event, d) {
+  Tooltip
+    .html('<u>' + d.artist + '</u><br>Song: ' + d.song + "<br>" + d.plays + " plays")
+    .style("left", (event.pageX + 10) + "px")  // Use pageX and pageY for correct tooltip placement
+    .style("top", (event.pageY - 30) + "px");
+};
 
-  // Forces applied to nodes
-  var simulation = d3.forceSimulation()
-    .force("center", d3.forceCenter().x(width / 2).y(height / 2))
-    .force("charge", d3.forceManyBody().strength(.1))
-    .force("collide", d3.forceCollide().strength(.2).radius(function(d) { return (size(d.value) + 3) }).iterations(1))
+const mouseleave = function(event, d) {
+  Tooltip.style("opacity", 0);
+};
 
-  // Apply forces to the nodes and update positions
-  simulation.nodes(data).on("tick", function(d) {
-    node
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; })
+// Initialize the circles with random positions and the forces
+const node = svg.append("g")
+  .selectAll("circle")
+  .data(data)
+  .join("circle")
+    .attr("class", "node")
+    .attr("r", d => size(d.plays))
+    .attr("cx", () => Math.random() * width)  // Set initial random x position
+    .attr("cy", () => Math.random() * height) // Set initial random y position
+    .style("fill", d => color(d.artist))
+    .style("fill-opacity", 0.8)
+    .attr("stroke", "black")
+    .style("stroke-width", 1)
+    .on("mouseover", mouseover)
+    .on("mousemove", mousemove)
+    .on("mouseleave", mouseleave)
+    .call(d3.drag()  // Enable dragging
+         .on("start", dragstarted)
+         .on("drag", dragged)
+         .on("end", dragended));
+
+// Apply forces to the nodes
+const simulation = d3.forceSimulation()
+  .force("charge", d3.forceManyBody().strength(0.05))  // Attraction between nodes
+  .force("collide", d3.forceCollide().strength(0.5).radius(d => size(d.plays) + 3).iterations(1))  // Prevent overlapping
+  .force("x", d3.forceX().strength(0.02).x(() => Math.random() * width))  // Random horizontal forces
+  .force("y", d3.forceY().strength(0.02).y(() => Math.random() * height));  // Random vertical forces
+
+// Update node positions on each simulation 'tick'
+simulation.nodes(data)
+  .on("tick", function() {
+    node.attr("cx", d => d.x)
+        .attr("cy", d => d.y);
   });
 
-  // dragging functionality
-  function dragstarted(d) {
-    if (!d3.event.active) simulation.alphaTarget(.03).restart();
-    d.fx = d.x;
-    d.fy = d.y;
-  }
-  function dragged(d) {
-    d.fx = d3.event.x;
-    d.fy = d3.event.y;
-  }
-  function dragended(d) {
-    if (!d3.event.active) simulation.alphaTarget(.03);
-    d.fx = null;
-    d.fy = null;
-  }
+// Drag functions for interactivity
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.03).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
 
-});
+function dragged(event, d) {
+  d.fx = event.x;
+  d.fy = event.y;
+}
+
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0.03);
+  d.fx = null;
+  d.fy = null;
+}
 
 </script>

@@ -1,9 +1,8 @@
 [
-    {"key": "Best Part", "value": 12, "region": "Blue", "artist": "Daniel Caesar"},
-    {"key": "3 Daqat", "value": 20, "region": "Green", "artist": "Abu"},
-    {"key": "Telephones", "value": 9, "region": "Red", "artist": "Vacations"},
-    {"key": "See You Again", "value": 16, "region": "Yellow", "artist": "Tyler The Creator"},
-    {"key": "Crossfaded", "value": 12, "region": "Purple", "artist": "Don Toliver"},
-    {"key": "Witchy", "value": 16, "region": "Grey", "artist": "Kaytranda"}
-  ]
-  
+  { "artist": "Daniel Caesar", "song": "Best Part", "plays": 12 },
+  { "artist": "Abu", "song": "3 Daqat", "plays": 20 },
+  { "artist": "Vacations", "song": "Telephones", "plays": 9 },
+  { "artist": "Tyler The Creator", "song": "See You Again", "plays": 16 },
+  { "artist": "Don Toliver", "song": "Crossfaded", "plays": 12 },
+  { "artist": "Kaytranada", "song": "Witchy", "plays": 16 }
+]
